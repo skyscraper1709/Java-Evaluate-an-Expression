@@ -1,0 +1,190 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package expressionevaluater;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Stack;
+
+/**
+ *
+ * @author Safat
+ */
+public class ExpressionEvaluater {
+
+    String fullText = "";
+    Stack<Character> stack = new Stack<Character>();
+    HashMap hm = new HashMap();
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        // TODO code application logic here
+        ExpressionEvaluater ee = new ExpressionEvaluater();
+        BufferedReader br = null;
+
+        try {
+
+            String sCurrentLine;
+
+            br = new BufferedReader(new FileReader("E:\\\\NetBeans Project workspace\\\\ExpressionEvaluater\\\\src\\\\expressionevaluater\\input.txt"));
+
+            if ((sCurrentLine = br.readLine()) != null) {
+                int vars = Integer.parseInt(sCurrentLine.trim());
+                System.out.println("Preparing to read " + vars + " variables");
+                for (int i = 0; i < vars; i++) {
+                    if ((sCurrentLine = br.readLine()) != null) {
+                        String varLine = sCurrentLine.trim();
+                        String[] tokenArray = varLine.split("=");
+                        ee.hm.put(tokenArray[0].trim(), tokenArray[1].trim());
+                    }
+                }
+                System.out.println("current Hash Map Size is: " + ee.hm.size());
+                Iterator it = ee.hm.entrySet().iterator();
+                while (it.hasNext()) {
+                    Map.Entry pair = (Map.Entry) it.next();
+                    System.out.println("\nMap Contents:\n" + pair.getKey() + " = " + pair.getValue());
+                    it.remove(); // avoids a ConcurrentModificationException
+                }
+            } else {
+                System.out.println("No valid first line");
+            }
+
+            //
+            String postFix = "";
+            if ((sCurrentLine = br.readLine()) != null) {
+                int exps = Integer.parseInt(sCurrentLine.trim());
+                System.out.println("Preparing to read " + exps + " expressions");
+
+                for (int i = 0; i < exps; i++) {
+                    postFix = "";
+                    System.out.println("i : " + i);
+                    if ((sCurrentLine = br.readLine()) != null) {
+
+                        String expLine = sCurrentLine.trim();
+
+                        for (int j = 0; j < expLine.length(); j++) {
+                            if (expLine.charAt(i) >= 'a' && expLine.charAt(i) <= 'z'
+                                    || expLine.charAt(i) >= 'A' && expLine.charAt(i) <= 'Z') {
+                                //add to string
+                                System.out.println("current: "+expLine.charAt(i));
+                                System.out.println("adding");
+                                postFix += expLine.charAt(i);
+                            } else if (expLine.charAt(i) == '+'
+                                    || expLine.charAt(i) == '-'
+                                    || expLine.charAt(i) == '*'
+                                    || expLine.charAt(i) == '/' /*and stack is empty*/) {
+                                System.out.println("operator");
+
+                                if (ee.stack.isEmpty()) {
+                                    System.out.println("is empty");
+                                    ee.stack.push(expLine.charAt(i));
+                                } else {
+                                    if (!ee.stack.isEmpty()) {
+                                        System.out.println(expLine.charAt(i)+" , "+ee.stack.peek());
+                                        if (ee.greater(expLine.charAt(i), ee.stack.peek())) {
+                                            System.out.println("pushing in while: "+expLine.charAt(i));
+                                            ee.stack.push(expLine.charAt(i));
+                                        } else if (ee.less(expLine.charAt(i), ee.stack.peek())) {
+                                            System.out.println("adding in peekk");
+                                            j--;
+                                            postFix += ee.stack.pop();
+                                        }
+
+                                    }
+                                    ee.stack.push(expLine.charAt(i));
+                                }
+                            }
+
+                        }
+                    }
+                    System.out.println("postFix: " + postFix);
+                }
+            }
+
+//            while ((sCurrentLine = br.readLine()) != null) {
+//                ee.fullText += sCurrentLine;
+//                System.out.println(sCurrentLine);
+//            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (br != null) {
+                    br.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+    }
+
+    private boolean greater(char charAt, Character peek) {
+        switch (charAt) {
+            case '-':
+                return true;
+
+            case '/':
+                if (peek == '/') {
+                    return true;
+                } else {
+                    return false;
+                }
+            case '+':
+                if (peek == '/' || peek == '*') {
+                    return false;
+                } else {
+                    return true;
+                }
+
+            case '*':
+                if (peek == '/') {
+                    return false;
+                } else {
+                    return true;
+                }
+
+        }
+        return false;
+    }
+
+    private boolean less(char charAt, Character peek) {
+        switch (charAt) {
+            case '/':
+                return true;
+
+            case '-':
+                if (peek == '-') {
+//                    return true;
+                } else {
+                    return false;
+                }
+            case '+':
+                if (peek == '/' || peek == '*') {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            case '*':
+                if (peek == '/') {
+                    return true;
+                } else {
+                    return false;
+                }
+
+        }
+        return false;
+    }
+
+}
